@@ -6,7 +6,7 @@ Native Isolation - for Clear + Darknet
 # ------------------------------------------------------------------
 # COPYRIGHT & LICENSING
 # ------------------------------------------------------------------
-# Copyright (C) 2024 Volkan Sah (Kücükbudak)
+# Copyright (C) 2025 Volkan Sah (Kücükbudak)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,7 +35,8 @@ Native Isolation - for Clear + Darknet
 # Respect the work of developers who provide secure, open code. Do not remove 
 # or obscure the author's identity.
 # ------------------------------------------------------------------
-
+# translated in english with ai was to lazy ;) Icions as a feature
+# ------------------------------------------------------------------
 #!/usr/bin/env python3
 import subprocess
 import json
@@ -49,54 +50,54 @@ import secrets
 
 @dataclass
 class NetworkPolicy:
-    """Netzwerk-Isolation-Policy für einen Tenant"""
-    # Isolation-Level (wähle EINEN)
-    STRICT_ISOLATION = "strict"      # Nur eigene Services, kein Internet
-    CLEARNET_API = "clearnet_api"    # + HTTPS zu externen APIs
-    CLEARNET_FULL = "clearnet_full"  # + HTTP/HTTPS zu beliebigen Zielen
-    TOR_ONLY = "tor_only"            # Nur über lokalen Tor-SOCKS-Proxy
+    """Network Isolation Policy for a Tenant"""
+    # Isolation Level (choose ONE)
+    STRICT_ISOLATION = "strict"      # Own services only, no internet
+    CLEARNET_API = "clearnet_api"    # + HTTPS to external APIs
+    CLEARNET_FULL = "clearnet_full"  # + HTTP/HTTPS to any destination
+    TOR_ONLY = "tor_only"            # Only via local Tor SOCKS proxy
     
     policy_type: str = STRICT_ISOLATION
     
-    # Erweiterte Optionen
-    allow_dns: bool = False          # DNS-Lookups erlauben
-    allow_ntp: bool = False          # NTP-Zeitabfragen
-    allowed_domains: List[str] = None  # Whitelist für Clearnet-Domains
-    tor_socks_port: int = 0          # Falls TOR_ONLY: lokaler SOCKS-Port
+    # Advanced Options
+    allow_dns: bool = False          # Allow DNS lookups
+    allow_ntp: bool = False          # NTP time queries
+    allowed_domains: List[str] = None  # Whitelist for Clearnet domains
+    tor_socks_port: int = 0          # If TOR_ONLY: local SOCKS port
 
 
 @dataclass
 class TenantConfig:
-    """Konfiguration für einen Mandanten (Kunde)"""
+    """Configuration for a Tenant (Customer)"""
     tenant_id: str
-    clearnet_domain: Optional[str]  # z.B. kunde1.beispiel.de (optional)
-    apache_port: int                 # Port für Hidden Service
-    php_fpm_port: int                # Dedizierter PHP-FPM Port
-    mysql_port: int                  # Dedizierter MySQL Port (3306 + offset)
-    pgsql_port: int                  # Dedizierter PostgreSQL Port (5432 + offset)
-    unix_user: str                   # z.B. tenant_kunde1
-    web_root: Path                   # /var/www/tenants/kunde1
-    network_policy: NetworkPolicy = None  # Netzwerk-Isolation-Policy
+    clearnet_domain: Optional[str]  # e.g., customer1.example.com (optional)
+    apache_port: int                # Port for Hidden Service
+    php_fpm_port: int                # Dedicated PHP-FPM Port
+    mysql_port: int                  # Dedicated MySQL Port (3306 + offset)
+    pgsql_port: int                  # Dedicated PostgreSQL Port (5432 + offset)
+    unix_user: str                   # e.g., tenant_customer1
+    web_root: Path                   # /var/www/tenants/customer1
+    network_policy: NetworkPolicy = None  # Network Isolation Policy
     
     def __post_init__(self):
-        # Default: Strikte Isolation
+        # Default: Strict Isolation
         if self.network_policy is None:
             self.network_policy = NetworkPolicy()
 
 
 class MultiTenantHostingManager:
-    """Verwaltet Multi-Tenant CMS-Hosting mit strikter Isolation"""
+    """Manages Multi-Tenant CMS Hosting with strict Isolation"""
     
     BASE_WEB_DIR = Path("/var/www/tenants")
     BASE_DB_DIR = Path("/var/lib/mysql-tenants")
     BASE_PGSQL_DIR = Path("/var/lib/postgresql-tenants")
-    PHP_FPM_POOL_DIR = Path("/etc/php/8.2/fpm/pool.d")  # Anpassen an deine PHP-Version
+    PHP_FPM_POOL_DIR = Path("/etc/php/8.2/fpm/pool.d")  # Adjust to your PHP version
     
     def __init__(self, dry_run: bool = False):
         self.dry_run = dry_run
     
     def _run_cmd(self, cmd: List[str], description: str = "") -> bool:
-        """Führt Befehl aus mit Error-Handling"""
+        """Executes command with error handling"""
         if self.dry_run:
             print(f"[DRY-RUN] {' '.join(cmd)}")
             if description:
@@ -109,64 +110,64 @@ class MultiTenantHostingManager:
                 print(f"✅ {description}")
             return True
         except subprocess.CalledProcessError as e:
-            print(f"❌ Fehler: {description}")
-            print(f"   Befehl: {' '.join(cmd)}")
-            print(f"   Fehler: {e.stderr}")
+            print(f"❌ Error: {description}")
+            print(f"   Command: {' '.join(cmd)}")
+            print(f"   Error: {e.stderr}")
             return False
     
     def create_tenant(self, config: TenantConfig):
-        """Erstellt kompletten Tenant mit allen Services"""
-        print(f"\n🚀 Erstelle Tenant: {config.tenant_id}")
+        """Creates complete Tenant with all services"""
+        print(f"\n🚀 Creating Tenant: {config.tenant_id}")
         print("=" * 70)
         
-        # 1. Unix-User erstellen
+        # 1. Create Unix User
         self._create_unix_user(config)
         
-        # 2. Verzeichnisse anlegen
+        # 2. Create Directories
         self._create_directories(config)
         
-        # 3. PHP-FPM Pool konfigurieren
+        # 3. Configure PHP-FPM Pool
         self._create_php_fpm_pool(config)
         
-        # 4. MySQL-Instanz erstellen
+        # 4. Create MySQL Instance
         self._create_mysql_instance(config)
         
-        # 5. PostgreSQL-Instanz erstellen (optional)
+        # 5. Create PostgreSQL Instance (optional)
         self._create_pgsql_instance(config)
         
-        # 6. Apache VirtualHost erstellen
+        # 6. Create Apache VirtualHost
         self._create_apache_vhost(config)
         
-        # 7. Tor Hidden Service konfigurieren
+        # 7. Configure Tor Hidden Service
         self._create_tor_service(config)
         
-        # 8. Firewall-Regeln setzen
+        # 8. Set Firewall Rules
         self._apply_firewall_rules(config)
         
-        print(f"\n✅ Tenant {config.tenant_id} erfolgreich erstellt!")
+        print(f"\n✅ Tenant {config.tenant_id} successfully created!")
         self._print_tenant_info(config)
     
     def _create_unix_user(self, config: TenantConfig):
-        """Erstellt dedizierten Unix-User pro Tenant"""
-        print(f"\n👤 Erstelle Unix-User: {config.unix_user}")
+        """Creates dedicated Unix user per Tenant"""
+        print(f"\n👤 Creating Unix User: {config.unix_user}")
         
-        # User erstellen (kein Login, kein Home)
+        # Create user (no login, no home)
         self._run_cmd([
             "sudo", "useradd",
             "--system",
             "--no-create-home",
             "--shell", "/usr/sbin/nologin",
             config.unix_user
-        ], f"User {config.unix_user} erstellt")
+        ], f"User {config.unix_user} created")
         
-        # Zur www-data Gruppe hinzufügen (für Apache-Zugriff)
+        # Add to www-data group (for Apache access)
         self._run_cmd([
             "sudo", "usermod", "-a", "-G", "www-data", config.unix_user
-        ], f"User zu www-data Gruppe hinzugefügt")
+        ], f"User added to www-data group")
     
     def _create_directories(self, config: TenantConfig):
-        """Erstellt alle nötigen Verzeichnisse"""
-        print(f"\n📁 Erstelle Verzeichnisse für {config.tenant_id}")
+        """Creates all necessary directories"""
+        print(f"\n📁 Creating Directories for {config.tenant_id}")
         
         dirs = [
             config.web_root,
@@ -184,15 +185,15 @@ class MultiTenantHostingManager:
                 "sudo", "chown", "-R",
                 f"{config.unix_user}:www-data",
                 str(directory)
-            ], f"Besitzer gesetzt: {directory}")
+            ], f"Owner set: {directory}")
             
             self._run_cmd([
                 "sudo", "chmod", "750", str(directory)
-            ], f"Rechte gesetzt: {directory}")
+            ], f"Permissions set: {directory}")
     
     def _create_php_fpm_pool(self, config: TenantConfig):
-        """Erstellt dedizierten PHP-FPM Pool"""
-        print(f"\n🐘 Erstelle PHP-FPM Pool für {config.tenant_id}")
+        """Creates dedicated PHP-FPM Pool"""
+        print(f"\n🐘 Creating PHP-FPM Pool for {config.tenant_id}")
         
         pool_config = f"""[{config.tenant_id}]
 user = {config.unix_user}
@@ -216,7 +217,7 @@ php_admin_value[upload_tmp_dir] = {config.web_root}/tmp
 php_admin_value[session.save_path] = {config.web_root}/sessions
 php_admin_value[sys_temp_dir] = {config.web_root}/tmp
 
-; Sicherheit
+; Security
 php_admin_flag[allow_url_fopen] = off
 php_admin_value[disable_functions] = exec,passthru,shell_exec,system,proc_open,popen,curl_exec,curl_multi_exec,parse_ini_file,show_source
 
@@ -236,30 +237,30 @@ php_admin_value[upload_max_filesize] = 10M
         
         if not self.dry_run:
             pool_file.write_text(pool_config)
-            print(f"✅ PHP-FPM Pool konfiguriert: {pool_file}")
+            print(f"✅ PHP-FPM Pool configured: {pool_file}")
         else:
-            print(f"[DRY-RUN] Würde Pool-Config schreiben: {pool_file}")
+            print(f"[DRY-RUN] Would write Pool Config: {pool_file}")
         
-        # PHP-FPM neu laden
+        # Reload PHP-FPM
         self._run_cmd([
             "sudo", "systemctl", "reload", "php8.2-fpm"
-        ], "PHP-FPM neu geladen")
+        ], "PHP-FPM reloaded")
     
     def _create_mysql_instance(self, config: TenantConfig):
-        """Erstellt dedizierte MySQL-Instanz mit eigenem Socket"""
-        print(f"\n🗄️  Erstelle MySQL-Instanz für {config.tenant_id}")
+        """Creates dedicated MySQL instance with its own socket"""
+        print(f"\n🗄️ Creating MySQL Instance for {config.tenant_id}")
         
         data_dir = self.BASE_DB_DIR / config.tenant_id / "data"
         socket_file = self.BASE_DB_DIR / config.tenant_id / f"mysql-{config.tenant_id}.sock"
         
-        # MySQL Data Directory initialisieren
+        # Initialize MySQL Data Directory
         self._run_cmd([
             "sudo", "mysql_install_db",
             f"--datadir={data_dir}",
             f"--user={config.unix_user}"
-        ], f"MySQL Data Directory initialisiert: {data_dir}")
+        ], f"MySQL Data Directory initialized: {data_dir}")
         
-        # MySQL Config für diese Instanz
+        # MySQL Config for this instance
         mysql_config = f"""[mysqld]
 datadir = {data_dir}
 socket = {socket_file}
@@ -269,12 +270,12 @@ bind-address = 127.0.0.1
 user = {config.unix_user}
 pid-file = {self.BASE_DB_DIR}/{config.tenant_id}/mysql.pid
 
-# Isolation & Sicherheit
+# Isolation & Security
 skip-networking = 0
 local-infile = 0
 symbolic-links = 0
 
-# Performance (anpassen je nach Bedarf)
+# Performance (adjust as needed)
 max_connections = 50
 innodb_buffer_pool_size = 128M
 
@@ -286,22 +287,22 @@ log_error = {config.web_root}/logs/mysql-error.log
         
         if not self.dry_run:
             mysql_conf_file.write_text(mysql_config)
-            print(f"✅ MySQL Config erstellt: {mysql_conf_file}")
+            print(f"✅ MySQL Config created: {mysql_conf_file}")
         
-        # Systemd Service erstellen
+        # Create Systemd Service
         self._create_mysql_systemd_service(config, mysql_conf_file)
         
-        # Zufälliges Root-Passwort generieren
+        # Generate random Root Password
         root_password = secrets.token_urlsafe(32)
         password_file = self.BASE_DB_DIR / config.tenant_id / "mysql_root_password.txt"
         
         if not self.dry_run:
             password_file.write_text(root_password)
             password_file.chmod(0o600)
-            print(f"✅ MySQL Root-Passwort: {password_file}")
+            print(f"✅ MySQL Root Password stored: {password_file}")
     
     def _create_mysql_systemd_service(self, config: TenantConfig, conf_file: Path):
-        """Erstellt Systemd-Service für MySQL-Instanz"""
+        """Creates Systemd Service for MySQL instance"""
         service_content = f"""[Unit]
 Description=MySQL Server for Tenant {config.tenant_id}
 After=network.target
@@ -334,45 +335,45 @@ WantedBy=multi-user.target
             
         self._run_cmd([
             "sudo", "systemctl", "daemon-reload"
-        ], "Systemd neu geladen")
+        ], "Systemd reloaded")
         
         self._run_cmd([
             "sudo", "systemctl", "enable", f"mysql-{config.tenant_id}"
-        ], f"MySQL-Service aktiviert: mysql-{config.tenant_id}")
+        ], f"MySQL Service enabled: mysql-{config.tenant_id}")
         
         self._run_cmd([
             "sudo", "systemctl", "start", f"mysql-{config.tenant_id}"
-        ], f"MySQL-Service gestartet")
+        ], f"MySQL Service started")
     
     def _create_pgsql_instance(self, config: TenantConfig):
-        """Erstellt dedizierte PostgreSQL-Instanz"""
-        print(f"\n🐘 Erstelle PostgreSQL-Instanz für {config.tenant_id}")
+        """Creates dedicated PostgreSQL instance"""
+        print(f"\n🐘 Creating PostgreSQL Instance for {config.tenant_id}")
         
         data_dir = self.BASE_PGSQL_DIR / config.tenant_id / "data"
         socket_dir = self.BASE_PGSQL_DIR / config.tenant_id / "sockets"
         
-        # Verzeichnisse erstellen
+        # Create directories
         data_dir.mkdir(parents=True, exist_ok=True)
         socket_dir.mkdir(parents=True, exist_ok=True)
         
-        # Besitzer setzen (PostgreSQL läuft als config.unix_user)
+        # Set owner (PostgreSQL runs as config.unix_user)
         self._run_cmd([
             "sudo", "chown", "-R",
             f"{config.unix_user}:www-data",
             str(self.BASE_PGSQL_DIR / config.tenant_id)
-        ], "PostgreSQL-Verzeichnisse: Besitzer gesetzt")
+        ], "PostgreSQL Directories: Owner set")
         
-        # PostgreSQL Data Directory initialisieren
+        # Initialize PostgreSQL Data Directory
         self._run_cmd([
             "sudo", "-u", config.unix_user,
-            "/usr/lib/postgresql/15/bin/initdb",  # Anpassen an deine PostgreSQL-Version
+            "/usr/lib/postgresql/15/bin/initdb",  # Adjust to your PostgreSQL version
             "-D", str(data_dir),
             "--encoding=UTF8",
             "--locale=C",
             "--auth=scram-sha-256"
-        ], f"PostgreSQL Data Directory initialisiert: {data_dir}")
+        ], f"PostgreSQL Data Directory initialized: {data_dir}")
         
-        # postgresql.conf anpassen
+        # Adjust postgresql.conf
         pg_config = f"""# PostgreSQL Configuration for Tenant {config.tenant_id}
 # Auto-generated - Do not edit manually
 
@@ -413,7 +414,7 @@ lc_time = 'C'
 ssl = off
 password_encryption = scram-sha-256
 
-# Performance (anpassen je nach Bedarf)
+# Performance (adjust as needed)
 random_page_cost = 1.1
 effective_io_concurrency = 200
 """
@@ -422,44 +423,44 @@ effective_io_concurrency = 200
         
         if not self.dry_run:
             pg_conf_file.write_text(pg_config)
-            print(f"✅ PostgreSQL Config erstellt: {pg_conf_file}")
+            print(f"✅ PostgreSQL Config created: {pg_conf_file}")
         
-        # pg_hba.conf für lokale Verbindungen
+        # pg_hba.conf for local connections
         pg_hba = f"""# PostgreSQL Host-Based Authentication for Tenant {config.tenant_id}
-# TYPE  DATABASE        USER            ADDRESS                 METHOD
+# TYPE  DATABASE        USER            ADDRESS                         METHOD
 
 # Local connections via Unix socket
-local   all             all                                     scram-sha-256
+local   all             all                                             scram-sha-256
 
 # Local connections via TCP/IP (127.0.0.1 only)
-host    all             all             127.0.0.1/32            scram-sha-256
-host    all             all             ::1/128                 scram-sha-256
+host    all             all             127.0.0.1/32                    scram-sha-256
+host    all             all             ::1/128                         scram-sha-256
 """
         
         pg_hba_file = data_dir / "pg_hba.conf"
         
         if not self.dry_run:
             pg_hba_file.write_text(pg_hba)
-            print(f"✅ PostgreSQL HBA Config erstellt: {pg_hba_file}")
+            print(f"✅ PostgreSQL HBA Config created: {pg_hba_file}")
         
-        # Systemd Service erstellen
+        # Create Systemd Service
         self._create_pgsql_systemd_service(config, data_dir)
         
-        # Zufälliges Passwort für postgres-User
+        # Random password for postgres user
         postgres_password = secrets.token_urlsafe(32)
         password_file = self.BASE_PGSQL_DIR / config.tenant_id / "postgres_password.txt"
         
         if not self.dry_run:
             password_file.write_text(postgres_password)
             password_file.chmod(0o600)
-            print(f"✅ PostgreSQL Passwort: {password_file}")
+            print(f"✅ PostgreSQL Password stored: {password_file}")
             
-            # Hinweis: Passwort muss nach dem Start gesetzt werden
-            print(f"⚠️  Nach dem Start manuell ausführen:")
+            # Note: Password must be set after startup
+            print(f"⚠️ Must be executed manually after startup:")
             print(f"   sudo -u {config.unix_user} psql -p {config.pgsql_port} -c \"ALTER USER postgres PASSWORD '{postgres_password}';\"")
     
     def _create_pgsql_systemd_service(self, config: TenantConfig, data_dir: Path):
-        """Erstellt Systemd-Service für PostgreSQL-Instanz"""
+        """Creates Systemd Service for PostgreSQL instance"""
         service_content = f"""[Unit]
 Description=PostgreSQL Server for Tenant {config.tenant_id}
 After=network.target
@@ -469,7 +470,7 @@ Type=notify
 User={config.unix_user}
 Group=www-data
 
-# PostgreSQL Binary (anpassen an deine Version)
+# PostgreSQL Binary (adjust to your version)
 ExecStart=/usr/lib/postgresql/15/bin/postgres -D {data_dir}
 ExecReload=/bin/kill -HUP $MAINPID
 
@@ -497,29 +498,29 @@ WantedBy=multi-user.target
         
         if not self.dry_run:
             service_file.write_text(service_content)
-        
+            
         self._run_cmd([
             "sudo", "systemctl", "daemon-reload"
-        ], "Systemd neu geladen")
+        ], "Systemd reloaded")
         
         self._run_cmd([
             "sudo", "systemctl", "enable", f"postgresql-{config.tenant_id}"
-        ], f"PostgreSQL-Service aktiviert: postgresql-{config.tenant_id}")
+        ], f"PostgreSQL Service enabled: postgresql-{config.tenant_id}")
         
         self._run_cmd([
             "sudo", "systemctl", "start", f"postgresql-{config.tenant_id}"
-        ], f"PostgreSQL-Service gestartet")
+        ], f"PostgreSQL Service started")
     
     def _create_apache_vhost(self, config: TenantConfig):
-        """Erstellt Apache VirtualHost (für Hidden Service & optional Clearnet)"""
-        print(f"\n🌐 Erstelle Apache VirtualHost für {config.tenant_id}")
+        """Creates Apache VirtualHost (for Hidden Service & optional Clearnet)"""
+        print(f"\n🌐 Creating Apache VirtualHost for {config.tenant_id}")
         
         # Hidden Service VirtualHost
         vhost_hs = f"""<VirtualHost *:{config.apache_port}>
     ServerName {config.tenant_id}.onion
     DocumentRoot {config.web_root}/public_html
     
-    # PHP-FPM über TCP
+    # PHP-FPM via TCP
     <FilesMatch \\.php$>
         SetHandler "proxy:fcgi://127.0.0.1:{config.php_fpm_port}"
     </FilesMatch>
@@ -534,7 +535,7 @@ WantedBy=multi-user.target
     ErrorLog {config.web_root}/logs/apache-error.log
     CustomLog {config.web_root}/logs/apache-access.log combined
     
-    # Sicherheit
+    # Security
     ServerSignature Off
     Header always set X-Frame-Options "SAMEORIGIN"
     Header always set X-Content-Type-Options "nosniff"
@@ -548,7 +549,7 @@ WantedBy=multi-user.target
         
         self._run_cmd([
             "sudo", "a2ensite", f"{config.tenant_id}-hs.conf"
-        ], f"VirtualHost aktiviert: {config.tenant_id}-hs")
+        ], f"VirtualHost enabled: {config.tenant_id}-hs")
         
         # Optional: Clearnet VirtualHost
         if config.clearnet_domain:
@@ -559,7 +560,7 @@ WantedBy=multi-user.target
                 f"{config.tenant_id}.onion",
                 config.clearnet_domain
             ) + """
-    # SSL (certbot übernimmt das)
+    # SSL (certbot handles this)
     # SSLEngine on
     # SSLCertificateFile ...
     # SSLCertificateKeyFile ...
@@ -568,16 +569,16 @@ WantedBy=multi-user.target
             if not self.dry_run:
                 clearnet_file.write_text(vhost_clearnet)
             
-            print(f"✅ Clearnet VirtualHost erstellt (SSL via certbot manuell hinzufügen)")
+            print(f"✅ Clearnet VirtualHost created (add SSL via certbot manually)")
         
-        # Apache neu laden
+        # Reload Apache
         self._run_cmd([
             "sudo", "systemctl", "reload", "apache2"
-        ], "Apache neu geladen")
+        ], "Apache reloaded")
     
     def _create_tor_service(self, config: TenantConfig):
-        """Erstellt Tor Hidden Service (wie in deinem Original)"""
-        print(f"\n🧅 Erstelle Tor Hidden Service für {config.tenant_id}")
+        """Creates Tor Hidden Service (as in your original)"""
+        print(f"\n🧅 Creating Tor Hidden Service for {config.tenant_id}")
         
         tor_dir = Path(f"/etc/tor/instances/{config.tenant_id}")
         tor_data_dir = Path(f"/var/lib/tor/instances/{config.tenant_id}")
@@ -608,13 +609,13 @@ Log notice syslog
         self._run_cmd([
             "sudo", "chown", "-R", "debian-tor:debian-tor",
             str(tor_dir), str(tor_data_dir)
-        ], "Tor-Verzeichnisse: Besitzer gesetzt")
+        ], "Tor Directories: Owner set")
         
         self._run_cmd([
             "sudo", "chmod", "700", str(tor_data_dir / "hidden_service")
-        ], "Hidden Service Dir: Rechte gesetzt")
+        ], "Hidden Service Dir: Permissions set")
         
-        # Systemd-Service (wie dein Template)
+        # Systemd Service (like your template)
         service_content = f"""[Unit]
 Description=Tor Hidden Service {config.tenant_id}
 After=network.target
@@ -643,33 +644,33 @@ WantedBy=multi-user.target
         
         self._run_cmd([
             "sudo", "systemctl", "daemon-reload"
-        ], "Systemd neu geladen")
+        ], "Systemd reloaded")
         
         self._run_cmd([
             "sudo", "systemctl", "enable", f"tor@{config.tenant_id}"
-        ], f"Tor-Service aktiviert")
+        ], f"Tor Service enabled")
         
         self._run_cmd([
             "sudo", "systemctl", "start", f"tor@{config.tenant_id}"
-        ], f"Tor-Service gestartet")
+        ], f"Tor Service started")
     
     def _apply_firewall_rules(self, config: TenantConfig):
         """
-        Setzt strikte iptables-Regeln basierend auf Network Policy
-        Unterstützt verschiedene Isolation-Level
+        Sets strict iptables rules based on Network Policy
+        Supports various isolation levels
         """
-        print(f"\n🔥 Setze Firewall-Regeln für {config.tenant_id}")
+        print(f"\n🔥 Setting Firewall Rules for {config.tenant_id}")
         print(f"   Policy: {config.network_policy.policy_type}")
         
         uid = self._get_user_uid(config.unix_user)
         if uid is None:
-            print(f"⚠️  User {config.unix_user} nicht gefunden - Firewall-Setup übersprungen")
+            print(f"⚠️ User {config.unix_user} not found - Firewall setup skipped")
             return
         
         policy = config.network_policy
         rules = []
         
-        # === PHASE 1: ESTABLISHED/RELATED (immer erlaubt) ===
+        # === PHASE 1: ESTABLISHED/RELATED (always allowed) ===
         rules.append((
             f"-A OUTPUT -m owner --uid-owner {uid} "
             f"-m conntrack --ctstate ESTABLISHED,RELATED "
@@ -677,7 +678,7 @@ WantedBy=multi-user.target
             f"-j ACCEPT"
         ))
         
-        # === PHASE 2: WHITELIST - Eigene Services ===
+        # === PHASE 2: WHITELIST - Own Services ===
         
         # MySQL
         rules.append((
@@ -695,20 +696,20 @@ WantedBy=multi-user.target
             f"-j ACCEPT"
         ))
         
-        # === PHASE 3: POLICY-ABHÄNGIGE REGELN ===
+        # === PHASE 3: POLICY-DEPENDENT RULES ===
         
         if policy.policy_type == NetworkPolicy.STRICT_ISOLATION:
-            # Option A: STRIKTE ISOLATION - Kein Internet
-            print(f"   🔒 Strikte Isolation: Nur interne Services erlaubt")
+            # Option A: STRICT ISOLATION - No Internet
+            print(f"   🔒 Strict Isolation: Only internal services allowed")
             
-            # DNS und NTP explizit NICHT erlaubt
-            # Spring direkt zu BLACKLIST
+            # DNS and NTP are explicitly NOT allowed
+            # Jump directly to BLACKLIST
             
         elif policy.policy_type == NetworkPolicy.CLEARNET_API:
-            # Option B: Clearnet API-Zugriff
-            print(f"   🌐 Clearnet API-Zugriff: DNS + HTTPS erlaubt")
+            # Option B: Clearnet API Access
+            print(f"   🌐 Clearnet API Access: DNS + HTTPS allowed")
             
-            # DNS erlauben
+            # Allow DNS
             rules.append((
                 f"-A OUTPUT -m owner --uid-owner {uid} "
                 f"-p udp --dport 53 "
@@ -716,7 +717,7 @@ WantedBy=multi-user.target
                 f"-j ACCEPT"
             ))
             
-            # HTTPS (443) erlauben - Standard für APIs
+            # Allow HTTPS (443) - Standard for APIs
             rules.append((
                 f"-A OUTPUT -m owner --uid-owner {uid} "
                 f"-p tcp --dport 443 "
@@ -724,13 +725,13 @@ WantedBy=multi-user.target
                 f"-j ACCEPT"
             ))
             
-            # WICHTIG: HTTP (80) ist NICHT erlaubt in CLEARNET_API
-            # Grund: APIs sollten nur über verschlüsselte Verbindungen kommunizieren
-            # Falls HTTP wirklich nötig ist, nutze CLEARNET_FULL
-        
+            # IMPORTANT: HTTP (80) is NOT allowed in CLEARNET_API
+            # Reason: APIs should only communicate over encrypted connections
+            # If HTTP is truly necessary, use CLEARNET_FULL
+            
         elif policy.policy_type == NetworkPolicy.CLEARNET_FULL:
-            # Option C: Voller Clearnet-Zugriff (wie normaler Webserver)
-            print(f"   🌍 Voller Clearnet-Zugriff: DNS + HTTP/HTTPS erlaubt")
+            # Option C: Full Clearnet Access (like a regular web server)
+            print(f"   🌍 Full Clearnet Access: DNS + HTTP/HTTPS allowed")
             
             rules.append((
                 f"-A OUTPUT -m owner --uid-owner {uid} "
@@ -745,10 +746,10 @@ WantedBy=multi-user.target
                 f"-m comment --comment 'Tenant_{config.tenant_id}_HTTP_HTTPS' "
                 f"-j ACCEPT"
             ))
-        
+            
         elif policy.policy_type == NetworkPolicy.TOR_ONLY:
-            # Option D: Nur über lokalen Tor-SOCKS-Proxy
-            print(f"   🧅 Tor-Only: Nur SOCKS-Proxy auf Port {policy.tor_socks_port}")
+            # Option D: Only via local Tor SOCKS proxy
+            print(f"   🧅 Tor-Only: Only SOCKS proxy on Port {policy.tor_socks_port}")
             
             if policy.tor_socks_port > 0:
                 rules.append((
@@ -758,11 +759,11 @@ WantedBy=multi-user.target
                     f"-j ACCEPT"
                 ))
             else:
-                print(f"   ⚠️  Tor-SOCKS-Port nicht konfiguriert!")
+                print(f"   ⚠️ Tor SOCKS port not configured!")
         
-        # === PHASE 4: BLACKLIST - Explizite Blockaden (Defense in Depth) ===
+        # === PHASE 4: BLACKLIST - Explicit blocks (Defense in Depth) ===
         
-        # Blockiere alle MySQL-Ports (außer eigenem - bereits erlaubt)
+        # Block all MySQL ports (except own - already allowed)
         rules.append((
             f"-A OUTPUT -m owner --uid-owner {uid} "
             f"-d 127.0.0.1 -p tcp --dport 3306:3400 "
@@ -770,7 +771,7 @@ WantedBy=multi-user.target
             f"-j REJECT --reject-with tcp-reset"
         ))
         
-        # Blockiere alle PostgreSQL-Ports (außer eigenem)
+        # Block all PostgreSQL ports (except own)
         rules.append((
             f"-A OUTPUT -m owner --uid-owner {uid} "
             f"-d 127.0.0.1 -p tcp --dport 5432:5532 "
@@ -778,7 +779,7 @@ WantedBy=multi-user.target
             f"-j REJECT --reject-with tcp-reset"
         ))
         
-        # Blockiere alle PHP-FPM Ports
+        # Block all PHP-FPM Ports
         rules.append((
             f"-A OUTPUT -m owner --uid-owner {uid} "
             f"-d 127.0.0.1 -p tcp --dport 9000:9200 "
@@ -786,7 +787,7 @@ WantedBy=multi-user.target
             f"-j REJECT --reject-with tcp-reset"
         ))
         
-        # === PHASE 5: DEFAULT DENY - Blockiere alles Restliche ===
+        # === PHASE 5: DEFAULT DENY - Block everything else ===
         
         # TCP Default Deny
         rules.append((
@@ -796,9 +797,9 @@ WantedBy=multi-user.target
             f"-j REJECT --reject-with tcp-reset"
         ))
         
-        # UDP Default Deny (mit Ausnahme für DNS falls erlaubt)
+        # UDP Default Deny (with exception for DNS if allowed)
         if policy.allow_dns or policy.policy_type in [NetworkPolicy.CLEARNET_API, NetworkPolicy.CLEARNET_FULL]:
-            # DNS wurde bereits erlaubt, blockiere Rest
+            # DNS was already allowed, block the rest
             rules.append((
                 f"-A OUTPUT -m owner --uid-owner {uid} "
                 f"-p udp ! --dport 53 "
@@ -806,7 +807,7 @@ WantedBy=multi-user.target
                 f"-j REJECT --reject-with icmp-port-unreachable"
             ))
         else:
-            # Kein DNS erlaubt, blockiere alle UDP
+            # No DNS allowed, block all UDP
             rules.append((
                 f"-A OUTPUT -m owner --uid-owner {uid} "
                 f"-p udp "
@@ -814,148 +815,83 @@ WantedBy=multi-user.target
                 f"-j REJECT --reject-with icmp-port-unreachable"
             ))
         
-        # === REGELN ANWENDEN ===
+        # === APPLY RULES ===
         
-        print(f"\n   Wende {len(rules)} Firewall-Regeln an...")
+        print(f"\n   Applying {len(rules)} Firewall Rules...")
         for i, rule in enumerate(rules, 1):
-            comment = rule.split("--comment")[1].split("'")[1] if "--comment" in rule else f"Regel_{i}"
+            comment = rule.split("--comment")[1].split("'")[1] if "--comment" in rule else f"Rule_{i}"
             self._run_cmd(
                 ["sudo", "iptables"] + rule.split(),
                 f"   [{i:2d}/{len(rules)}] {comment}"
             )
         
-        print(f"\n✅ Firewall-Regeln für {config.tenant_id} erfolgreich gesetzt")
+        print(f"\n✅ Firewall rules for {config.tenant_id} successfully set")
         self._print_policy_summary(config)
     
     def _print_policy_summary(self, config: TenantConfig):
-        """Zeigt Zusammenfassung der Netzwerk-Policy"""
+        """Displays summary of the Network Policy"""
         policy = config.network_policy
         
         print("\n" + "─" * 70)
-        print(f"📋 Netzwerk-Policy für {config.tenant_id}")
+        print(f"📋 Network Policy for {config.tenant_id}")
         print("─" * 70)
-        print(f"Policy-Typ: {policy.policy_type}")
-        print("\n✅ Erlaubte Verbindungen:")
+        print(f"Policy Type: {policy.policy_type}")
+        print("\n✅ Allowed Connections:")
         print(f"   • 127.0.0.1:{config.mysql_port} (MySQL)")
         print(f"   • 127.0.0.1:{config.pgsql_port} (PostgreSQL)")
         
         if policy.policy_type == NetworkPolicy.STRICT_ISOLATION:
-            print("\n❌ Blockiert:")
-            print(f"   • Alle externen Verbindungen (kein Internet)")
-            print(f"   • DNS-Lookups")
-            print(f"   • Andere Tenant-Services")
+            print("\n❌ Blocked:")
+            print(f"   • All external connections (no Internet)")
+            print(f"   • DNS Lookups")
+            print(f"   • Other Tenant Services")
             
         elif policy.policy_type == NetworkPolicy.CLEARNET_API:
             print(f"   • *:53 (DNS)")
             print(f"   • *:443 (HTTPS)")
-            print("\n❌ Blockiert:")
-            print(f"   • HTTP Port 80 (nur HTTPS erlaubt)")
-            print(f"   • Andere Tenant-Services")
+            print("\n❌ Blocked:")
+            print(f"   • HTTP Port 80 (only HTTPS allowed)")
+            print(f"   • Other Tenant Services")
             
         elif policy.policy_type == NetworkPolicy.CLEARNET_FULL:
             print(f"   • *:53 (DNS)")
             print(f"   • *:80,443 (HTTP/HTTPS)")
-            print("\n❌ Blockiert:")
-            print(f"   • Andere Tenant-Services")
+            print("\n❌ Blocked:")
+            print(f"   • Other Tenant Services")
             
         elif policy.policy_type == NetworkPolicy.TOR_ONLY:
             print(f"   • 127.0.0.1:{policy.tor_socks_port} (Tor SOCKS)")
-            print("\n❌ Blockiert:")
-            print(f"   • Direkte Internet-Verbindungen")
-            print(f"   • DNS (Tor übernimmt DNS)")
-            print(f"   • Andere Tenant-Services")
+            print("\n❌ Blocked:")
+            print(f"   • Direct Internet Connections")
+            print(f"   • DNS (Tor handles DNS)")
+            print(f"   • Other Tenant Services")
         
         print("─" * 70 + "\n")
     
     def _get_user_uid(self, username: str) -> Optional[int]:
-        """Holt die UID eines Unix-Users"""
+        """Gets the UID of a Unix user"""
         try:
             return pwd.getpwnam(username).pw_uid
         except KeyError:
             return None
     
     def _print_tenant_info(self, config: TenantConfig):
-        """Gibt wichtige Infos zum Tenant aus"""
+        """Outputs important Tenant information"""
         hostname_file = Path(f"/var/lib/tor/instances/{config.tenant_id}/hidden_service/hostname")
         
-        onion_address = "Noch nicht generiert - warte 30 Sekunden"
+        onion_address = "Not yet generated - wait 30 seconds"
         if not self.dry_run and hostname_file.exists():
             onion_address = hostname_file.read_text().strip()
         
         print("\n" + "=" * 70)
-        print(f"📋 Tenant-Informationen: {config.tenant_id}")
+        print(f"📋 Tenant Information: {config.tenant_id}")
         print("=" * 70)
-        print(f"🧅 Onion-Adresse:     {onion_address}")
-        print(f"🌐 Clearnet-Domain:   {config.clearnet_domain or 'Nicht konfiguriert'}")
-        print(f"📁 Web-Root:          {config.web_root}/public_html")
-        print(f"👤 Unix-User:         {config.unix_user}")
+        print(f"🧅 Onion Address:     {onion_address}")
+        print(f"🌐 Clearnet Domain:   {config.clearnet_domain or 'N/A'}")
+        print(f"👤 Unix User:         {config.unix_user}")
+        print(f"📂 Web Root:          {config.web_root}")
         print(f"🐘 PHP-FPM Port:      {config.php_fpm_port}")
-        print(f"🗄️  MySQL Port:        {config.mysql_port}")
-        print(f"📝 MySQL Passwort:    {self.BASE_DB_DIR}/{config.tenant_id}/mysql_root_password.txt")
-        print(f"📊 Logs:              {config.web_root}/logs/")
+        print(f"🗄️ MySQL Port:        {config.mysql_port}")
+        print(f"🐘 PostgreSQL Port:   {config.pgsql_port}")
+        print(f"🔥 Network Policy:    {config.network_policy.policy_type}")
         print("=" * 70)
-
-
-# ============================================================================
-# VERWENDUNG
-# ============================================================================
-
-if __name__ == "__main__":
-    import argparse
-    
-    parser = argparse.ArgumentParser(
-        description="Multi-Tenant Micro-CMS Hosting Manager"
-    )
-    parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--create", type=str, metavar="TENANT_ID")
-    parser.add_argument("--clearnet-domain", type=str)
-    parser.add_argument(
-        "--network-policy",
-        type=str,
-        choices=["strict", "clearnet_api", "clearnet_full", "tor_only"],
-        default="strict",
-        help="Netzwerk-Isolation-Policy (default: strict)"
-    )
-    parser.add_argument("--tor-socks-port", type=int, default=0)
-    
-    args = parser.parse_args()
-    
-    manager = MultiTenantHostingManager(dry_run=args.dry_run)
-    
-    if args.create:
-        # Automatische Port-Zuweisung (könnte aus DB kommen)
-        tenant_num = hash(args.create) % 100
-        
-        # Network Policy konfigurieren
-        network_policy = NetworkPolicy(
-            policy_type=args.network_policy,
-            tor_socks_port=args.tor_socks_port
-        )
-        
-        config = TenantConfig(
-            tenant_id=args.create,
-            clearnet_domain=args.clearnet_domain,
-            apache_port=9000 + tenant_num,
-            php_fpm_port=9100 + tenant_num,
-            mysql_port=3306 + tenant_num,
-            pgsql_port=5432 + tenant_num,
-            unix_user=f"tenant_{args.create}",
-            web_root=manager.BASE_WEB_DIR / args.create,
-            network_policy=network_policy
-        )
-        
-        manager.create_tenant(config)
-        
-        # Policy-Beispiele ausgeben
-        print("\n" + "=" * 70)
-        print("📚 Weitere Policy-Beispiele:")
-        print("=" * 70)
-        print("\n# Strikte Isolation (Standard):")
-        print(f"sudo python3 hosting_manager.py --create {args.create} --network-policy strict")
-        print("\n# Clearnet API-Zugriff (DNS + HTTPS):")
-        print(f"sudo python3 hosting_manager.py --create {args.create} --network-policy clearnet_api")
-        print("\n# Voller Clearnet-Zugriff:")
-        print(f"sudo python3 hosting_manager.py --create {args.create} --network-policy clearnet_full")
-        print("\n# Nur über Tor (SOCKS-Proxy):")
-        print(f"sudo python3 hosting_manager.py --create {args.create} --network-policy tor_only --tor-socks-port 9050")
-        print("=" * 70 + "\n")
