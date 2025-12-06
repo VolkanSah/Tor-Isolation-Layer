@@ -55,7 +55,7 @@ Each policy enforces DNS, NTP, socket binding, and domain whitelist behavior.
 * PHP-FPM 8.2 (adjust path if needed)
 * MySQL or MariaDB server tools
 * PostgreSQL binaries (adjust version paths)
-* Tor with multi-instance support
+* Tor with multi-instance support Have a look on this: [Multiple Isolated Tor Instances for Hidden Services](https://github.com/VolkanSah/Multiple-Isolated-Tor-Instances-for-Hidden-Services)
 * systemd
 
 Root access is mandatory for provisioning.
