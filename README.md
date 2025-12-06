@@ -1,5 +1,5 @@
 # Tor Isolation Layer (TIL)
-#### an idea! 
+#### an idea! not production ready!
 ![Tor Logo](https://upload.wikimedia.org/wikipedia/commons/1/15/Tor-logo-2011-flat.svg)
 
 A native multi-tenant isolation framework for high-security hosting environments.
