@@ -107,5 +107,38 @@ This project is licensed under **GPLv3**.
 You must retain the copyright notice.
 Derivative work must also be released under GPLv3 and published with full source.
 
-#### copyright
-> Volkan Kücükbudak
+
+
+## Your Support
+
+Found this useful?
+
+- ⭐ Star this repository
+- 🐛 Report issues
+- 💡 Suggest improvements
+- 💖 [Sponsor development](https://github.com/sponsors/volkansah)
+
+---
+
+**Stay secure. Stay paranoid. 🔒**
+
+
+### Other Stuff
+
+##### Security Guides:
+- [Multiple Isolated Tor Instances for Hidden Services](https://github.com/VolkanSah/Multiple-Isolated-Tor-Instances-for-Hidden-Services)
+- [Security Headers — Complete Implementation Guide](https://github.com/VolkanSah/Security-Headers)
+- [Securing FastAPI Applications](https://github.com/VolkanSah/Securing-FastAPI-Applications)
+- [ModSecurity Webserver Protection Guide](https://github.com/VolkanSah/ModSecurity-Webserver-Protection-Guide)
+- [GPT Security Best Practices](https://github.com/VolkanSah/GPT-Security-Best-Practices)
+- [WPScan – WordPress Security Scanner Guide](https://github.com/VolkanSah/WordPress-Security-Scanner-advanced-use)
+
+
+Thank you for your support! ❤️
+
+
+
+##### Credits
+> Copyright S. Volkan Kücükbudak
+> 
+> Updated on 06.12.2025
